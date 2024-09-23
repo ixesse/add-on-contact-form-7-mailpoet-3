@@ -15,9 +15,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 
-// use MailPoet\Models\Segment;
-use MailPoet\Models\Subscriber;
-use MailPoet\Models\CustomField;    // get all custom field info without value
+//use MailPoet\Models\Subscriber;
+//use MailPoet\Models\CustomField;    // get all custom field info without value
 use MailPoet\Settings\SettingsController; // get mailpoet settings
 
 if ( ! class_exists( 'MailPoet_CF7_Submit_Form' ) ) {
@@ -157,15 +156,18 @@ if ( ! class_exists( 'MailPoet_CF7_Submit_Form' ) ) {
 									foreach ( $form_data[ $mailpoetsignup_name ] as $selected ) {
 										if ( $selected ) {
 											// Get the existing subscriber's email (if exist) and get the existing segments id
-											$subscriber = Subscriber::findOne( $email );
+											try {
+												$subscriber = \MailPoet\API\API::MP( 'v1' )->getSubscriber( $email );
+											} catch (\Exception $e) {}
+
 											if ( $subscriber ) {
-												$subscriber->withSubscriptions();
-												$current_lists = $subscriber->subscriptions;
+												$current_lists = $subscriber['subscriptions'];
 
 												foreach ( $current_lists as $key => $value ) {
 													$list_ids[] = $value['segment_id'];
 												}
 											}
+
 											// Get the new list ids from hidden form
 											$new_list_ids = $form_data['fieldVal'];
 
@@ -189,12 +191,14 @@ if ( ! class_exists( 'MailPoet_CF7_Submit_Form' ) ) {
 				}
 
 				// Get custom fields and fields type
-				$fields       = CustomField::findMany();
+//				$fields       = CustomField::findMany();
+				$fields       = array();
+
 				$results      = array();
 				$results_type = array();
 				foreach ( $fields as $field ) {
-					$results[ 'cf_' . $field->id ]      = $field->name;
-					$results_type[ 'cf_' . $field->id ] = $field->type;
+					$results[ 'cf_' . $field['id'] ]      = $field['name'];
+					$results_type[ 'cf_' . $field['id'] ] = $field['type'];
 				}
 
 				// Check mailpoet sign-up confirmation
@@ -240,13 +244,12 @@ if ( ! class_exists( 'MailPoet_CF7_Submit_Form' ) ) {
 					try {
 						$subscriber = \MailPoet\API\API::MP( 'v1' )->addSubscriber( $subscribe_data, array_unique( $list_ids ), $options );
 					} catch ( Exception $exception ) {
-
 						// If subscriber is already subscribed once and unsubscribed later, then again subscribed to any list, change the status to subscribed and add to the list
-						if ( 'This subscriber already exists.' == $exception->getMessage() ) {
+						if ( '12' == $exception->getCode() ) {
 							// Change subscriber status to subscribed
 							$subscribe_data['status'] = 'subscribed';
 							// Update the status
-							$subscriber = Subscriber::createOrUpdate( $subscribe_data );
+							$subscriber = \MailPoet\API\API::MP( 'v1' )->updateSubscriber( $subscriber['id'], $subscribe_data );
 							// Now subscribe to the new list
 							try {
 								// If 'mpconsent' form active it will add all lists.
@@ -254,7 +257,7 @@ if ( ! class_exists( 'MailPoet_CF7_Submit_Form' ) ) {
 									$current_list = $list_ids;
 								}
 								$subscriber = \MailPoet\API\API::MP( 'v1' )->subscribeToLists(
-									$subscriber->id,
+									$subscriber['id'],
 									array_unique( $current_list )
 								);
 

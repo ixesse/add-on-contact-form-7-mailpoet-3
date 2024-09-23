@@ -46,8 +46,6 @@ function fetchedKeyVal() {
 };
 
 
-use MailPoet\Models\Segment;
-
 if ( ! class_exists( 'MailPoet_CF7_Integration' ) ) {
 	class MailPoet_CF7_Integration {
 		/**
@@ -119,6 +117,7 @@ if ( ! class_exists( 'MailPoet_CF7_Integration' ) ) {
 
 			// Array of list id
 			$list_array       = $tag->get_option( 'list', 'int' );
+
 			$count_list_array = count( $list_array );
 			$mp_segments      = $this->mailpoet_segments_data( $list_array );
 
@@ -135,7 +134,7 @@ if ( ! class_exists( 'MailPoet_CF7_Integration' ) ) {
 
 			$attributes = wpcf7_format_atts( $atts );
 
-			$sagments = Segment::where_not_equal( 'type', Segment::TYPE_WP_USERS )->findArray();
+			$sagments = \MailPoet\API\API::MP( 'v1' )->getLists();
 
 			ob_start(); // Start buffer to return
 			?>
@@ -232,7 +231,7 @@ if ( ! class_exists( 'MailPoet_CF7_Integration' ) ) {
 				return array();
 			}
 
-			$segments = Segment::where_not_equal( 'type', Segment::TYPE_WP_USERS )->findArray();
+			$segments = \MailPoet\API\API::MP( 'v1' )->getLists();
 
 			$ret = array();
 
@@ -286,8 +285,8 @@ if ( ! class_exists( 'MailPoet_CF7_Integration' ) ) {
 							<th scope="row"><?php echo $this->__( 'MailPoet Lists' ); ?></th>
 							<td>
 								<?php
-								$sagments = Segment::where_not_equal( 'type', Segment::TYPE_WP_USERS )
-													->where_not_equal( 'type', Segment::TYPE_WC_USERS )->findArray();
+								$sagments = \MailPoet\API\API::MP( 'v1' )->getLists();
+
 								if ( is_array( $sagments ) ) :
 									foreach ( $sagments as $sagment ) :
 										?>

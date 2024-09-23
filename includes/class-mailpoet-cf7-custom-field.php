@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-use MailPoet\Models\CustomField;
+//use MailPoet\Models\CustomField;
 
 class MailpoetCustomField {
 
@@ -56,7 +56,8 @@ class MailpoetCustomField {
 	 */
 	public function mailpoetsignup_cf() {
 
-		$fields  = CustomField::findMany();
+//		$fields  = CustomField::findMany();
+		$fields  = array();
 		$results = array();
 		foreach ( $fields as $field ) {
 			$results[ 'cf_' . $field->id ] = $field->name;
