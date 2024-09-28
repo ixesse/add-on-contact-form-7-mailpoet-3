@@ -15,8 +15,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 
-//use MailPoet\Models\Subscriber;
-//use MailPoet\Models\CustomField;    // get all custom field info without value
 use MailPoet\Settings\SettingsController; // get mailpoet settings
 
 if ( ! class_exists( 'MailPoet_CF7_Submit_Form' ) ) {
@@ -160,7 +158,7 @@ if ( ! class_exists( 'MailPoet_CF7_Submit_Form' ) ) {
 												$subscriber = \MailPoet\API\API::MP( 'v1' )->getSubscriber( $email );
 											} catch (\Exception $e) {}
 
-											if ( $subscriber ) {
+											if ( isset( $subscriber ) ) {
 												$current_lists = $subscriber['subscriptions'];
 
 												foreach ( $current_lists as $key => $value ) {
@@ -191,14 +189,17 @@ if ( ! class_exists( 'MailPoet_CF7_Submit_Form' ) ) {
 				}
 
 				// Get custom fields and fields type
-//				$fields       = CustomField::findMany();
-				$fields       = array();
+				$fields = \MailPoet\API\API::MP( 'v1' )->getSubscriberFields();
+				// Remove defaults fields email, first_name and last_name
+				unset( $fields[0] ); // email
+				unset( $fields[1] ); // first_name
+				unset( $fields[2] ); // last_name
 
 				$results      = array();
 				$results_type = array();
 				foreach ( $fields as $field ) {
-					$results[ 'cf_' . $field['id'] ]      = $field['name'];
-					$results_type[ 'cf_' . $field['id'] ] = $field['type'];
+					$results[ $field['id'] ]      = $field['name'];
+					$results_type[ $field['id'] ] = $field['type'];
 				}
 
 				// Check mailpoet sign-up confirmation

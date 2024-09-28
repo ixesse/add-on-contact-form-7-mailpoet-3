@@ -5,8 +5,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-//use MailPoet\Models\CustomField;
-
 class MailpoetCustomField {
 
 	public function __construct() {
@@ -56,11 +54,16 @@ class MailpoetCustomField {
 	 */
 	public function mailpoetsignup_cf() {
 
-//		$fields  = CustomField::findMany();
-		$fields  = array();
+		// Get subscriber fields
+		$fields = \MailPoet\API\API::MP( 'v1' )->getSubscriberFields();
+		// Remove defaults fields email, first_name and last_name
+		unset( $fields[0] ); // email
+		unset( $fields[1] ); // first_name
+		unset( $fields[2] ); // last_name
+
 		$results = array();
 		foreach ( $fields as $field ) {
-			$results[ 'cf_' . $field->id ] = $field->name;
+			$results[ $field['id'] ] = $field['name'];
 		}
 
 		if ( ! empty( $results ) ) {
